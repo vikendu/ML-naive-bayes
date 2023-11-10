@@ -81,10 +81,28 @@ class NaiveBayes:
 
     def _calc_p_class_prior(self):
 
+        for outcome in np.unique(self.label_train_set):
+            outcome_count = sum(self.label_train_set == outcome)
+            self.p_class_prior[outcome] = outcome_count/self.train_set_size
+
+
     def _calc_p_feature_likelihood(self):
+
+        for f in self.features:
+            for outcome in np.unique(self.label_train_set):
+                outcome_count = sum(self.label_train_set == outcome)
+                feature_likelihood = self.feature_train_set[f][self.label_train_set[self.label_train_set == outcome].index.values.tolist()].value_counts().to_dict()
+
+                for f_value, count in feature_likelihood.items():
+                    self.p_feature_likelihood[f][f_value + '_' + outcome] = count/outcome_count
+
         
     def _calc_p_feature_prior(self):
+        for f in self.features:
+            f_values = self.feature_train_set[f].value_counts().to_dict()
 
+            for f_value, count in f_values.items():
+                self.p_feature_prior[f][f_value] = count/self.train_set_size
         
 
 

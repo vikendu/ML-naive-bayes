@@ -1,19 +1,5 @@
 import pandas as pd
 import numpy as np
-#Whether or not we can play golf given weather conditions
-
-#dataset:
-
-# features = np.array([
-#     ["Sunny", "Hot", "High", "False"],
-#     ["Overcast", "Mild", "Normal", "True"],
-#     ["Rainy", "Cool", "Normal", "False"],
-#     ["Sunny", "Mild", "Normal", "True"],
-#     ["Rainy", "Hot", "High", "False"]
-# ])
-# labels = np.array(["Yes", "Yes", "No", "Yes", "No"])
-
-# TODO: Read the dataset 
 
 def read_data(dataset):
 
@@ -32,11 +18,9 @@ def train_test_split(features, labels, split, random_state):
 
     return feature_train_set, feature_test_set, label_train_set, label_test_set
 
-# TODO: Calculate probability of each predictor variable(sunny/hot)
+def accuracy(label_actual, label_predicted):
 
-# TODO: Calculate Likelihood for each class(label - YES/NO)
-
-# TODO: Return the greatest likelihood
+    return round(float(sum(label_predicted == label_actual)) / float(len(label_actual)) * 100, 2)
 
 class NaiveBayes:
 
@@ -103,12 +87,46 @@ class NaiveBayes:
 
             for f_value, count in f_values.items():
                 self.p_feature_prior[f][f_value] = count/self.train_set_size
-        
 
+    def predict(self, features):
 
+        results = []
+        features = np.array(features)
 
+        for feature in features:
+            p_posterior = {}
+            for outcome in np.unique(self.label_train_set):
+                p_prior = self.p_class_prior[outcome]
+                likelihood = 1
+                evidence = 1
 
-# Test code beyond this
-# df = pd.read_table("weather.txt")
-# features, labels = read_data(df)
+                for f, f_value in zip(self.features, feature):
+                    likelihood *= self.p_feature_likelihood[f][f_value + '_' + outcome]
+                    evidence *= self.p_feature_prior[f][f_value]
 
+                p_posterior[outcome] = (likelihood * p_prior) / evidence
+
+            results.append(max(p_posterior, key = lambda x: p_posterior[x]))
+
+        return np.array(results)
+
+if __name__ == '__main__':
+
+    dataFrame = pd.read_table("weather.txt")
+    feature, label = read_data(dataFrame)
+
+    feature_train, feature_test, label_train, label_test = train_test_split(feature, label, 0.1, random_state = 0)
+
+    naive_bayes_obj = NaiveBayes()
+    naive_bayes_obj.fit(feature_train, label_train)
+
+    print("Accuracy: {}".format(accuracy(label_train, naive_bayes_obj.predict(feature_train))))
+    print("Accuracy: {}".format(accuracy(label_test, naive_bayes_obj.predict(feature_test))))
+
+    # Random Queries:
+
+    query = np.array([['Rainy', 'Mild', 'Normal', 't']])
+    print("Query 1:- {} -> {}".format(query, naive_bayes_obj.predict(query)))
+
+    query = np.array([['Overcast','Hot', 'High', 'f']])
+    print("Query 2:- {} -> {}".format(query, naive_bayes_obj.predict(query)))

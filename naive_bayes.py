@@ -1,3 +1,4 @@
+import pickle
 import pandas as pd
 import numpy as np
 
@@ -117,9 +118,13 @@ if __name__ == '__main__':
 
     feature_train, feature_test, label_train, label_test = train_test_split(feature, label, 0.1, random_state = 0)
 
-    naive_bayes_obj = NaiveBayes()
-    naive_bayes_obj.fit(feature_train, label_train)
-
+    try:
+        naive_bayes_obj = pickle.load(open("probabilities.pickle", "rb"))
+    except (OSError, IOError) as e:
+        naive_bayes_obj = NaiveBayes()
+        naive_bayes_obj.fit(feature_train, label_train)
+        pickle.dump(naive_bayes_obj, open("probabilities.pickle", "wb"))
+    
     print("Accuracy: {}".format(accuracy(label_train, naive_bayes_obj.predict(feature_train))))
     print("Accuracy: {}".format(accuracy(label_test, naive_bayes_obj.predict(feature_test))))
 
